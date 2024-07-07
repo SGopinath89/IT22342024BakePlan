@@ -7,41 +7,46 @@ const cors = require('cors');
 require('dotenv/config');
 
 app.use(cors());
-app.options('*', cors())
+app.options('*', cors());
 
-//middleware
+// Middleware
 app.use(bodyParser.json());
 app.use(morgan('tiny'));
 
-
-//Routes
-const categoriesRoutes = require('./routes/categories');
+// Routes
 const productsRoutes = require('./routes/products');
 const usersRoutes = require('./routes/users');
 const ordersRoutes = require('./routes/orders');
 
-const api = process.env.API_URL;
+const api = '/api/v1';  
 
-app.use(`${api}/categories`, categoriesRoutes);
 app.use(`${api}/products`, productsRoutes);
 app.use(`${api}/users`, usersRoutes);
 app.use(`${api}/orders`, ordersRoutes);
 
-//Database
-mongoose.connect(process.env.CONNECTION_STRING, {
+// Database Connection
+mongoose.connect(process.env.CONNECTION_STRING || "mongodb://localhost:27017/crud", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    dbName: 'eshop-database'
+    useFindAndModify: false,
+    useCreateIndex: true,
+    dbName: 'BAKEPLAN'
 })
-.then(()=>{
-    console.log('Database Connection is ready...')
+.then(() => {
+    console.log('Database Connection is ready...');
 })
-.catch((err)=> {
+.catch((err) => {
     console.log(err);
-})
+});
 
-//Server
-app.listen(3000, ()=>{
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+    res.status(500).json({ message: err.message });
+});
 
-    console.log('server is running http://localhost:3000');
-})
+// Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`API Base Path: ${api}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
